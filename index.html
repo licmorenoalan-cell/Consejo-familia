@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>El Consejo de Familia · Simulación Competitiva</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Spectral:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1a1815; --paper:#f0ebe2; --paper-2:#e4ddd0; --paper-3:#d9d0bf;
+    --rust:#b5471f; --rust-dark:#8a3415; --steel:#3d4751; --steel-light:#6b7680;
+    --ochre:#c8941e; --green:#4a5d3a; --line:#cdc4b4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    background:var(--paper); color:var(--ink);
+    font-family:'Spectral',Georgia,serif; -webkit-font-smoothing:antialiased;
+    background-image:repeating-linear-gradient(0deg,transparent,transparent 38px,rgba(61,71,81,0.022) 38px,rgba(61,71,81,0.022) 39px);
+    min-height:100%;
+  }
+  .grain{
+    position:fixed;inset:0;pointer-events:none;z-index:999;opacity:0.4;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+  header{
+    border-bottom:3px solid var(--ink); padding:14px 28px 12px;
+    display:flex;justify-content:space-between;align-items:center;
+    flex-wrap:wrap;gap:12px; background:var(--paper);
+    position:sticky;top:0;z-index:50;
+  }
+  .brand .kicker{
+    font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--rust);font-weight:600;
+  }
+  .brand h1{
+    font-family:'Archivo Black',sans-serif;font-size:clamp(17px,2.6vw,24px);
+    line-height:0.95;letter-spacing:-0.5px;text-transform:uppercase;
+  }
+  .brand h1 span{color:var(--rust);}
+  .progress-wrap{display:flex;flex-direction:column;gap:5px;align-items:flex-end;}
+  .header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .clock-wrap{
+    display:flex;flex-direction:column;align-items:center;
+    border:2px solid var(--ink);background:var(--ink);padding:4px 12px;
+  }
+  .clock-label{
+    font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--ochre);
+  }
+  .clock-val{
+    font-family:'Archivo Black',sans-serif;font-size:20px;color:var(--paper);
+    line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:1px;
+  }
+  .progress-label{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;
+    color:var(--steel);font-weight:600;
+  }
+  .pbar{
+    width:230px;max-width:42vw;height:9px;background:var(--paper-3);
+    border:1.5px solid var(--ink);
+  }
+  .pbar-fill{height:100%;background:var(--rust);width:0%;transition:width .35s ease;}
+  main{max-width:820px;margin:0 auto;padding:30px 24px 70px;}
+  .screen{display:none;animation:fade .35s ease;}
+  .screen.show{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+  .introbox{
+    border:2.5px solid var(--ink);background:var(--paper);
+    box-shadow:7px 7px 0 rgba(26,24,21,0.16);
+  }
+  .introbox .iband{background:var(--ink);color:var(--paper);padding:14px 22px;}
+  .introbox .iband .it{
+    font-family:'Archivo Black',sans-serif;font-size:22px;text-transform:uppercase;
+    letter-spacing:-0.4px;
+  }
+  .introbox .iband .ik{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    color:var(--ochre);margin-top:3px;
+  }
+  .introbox .ibody{padding:22px 24px;}
+  .introbox .ibody p{font-size:15.5px;line-height:1.6;margin-bottom:13px;}
+  .introbox .ibody p em{color:var(--rust-dark);font-style:italic;}
+  .rules{margin:16px 0;}
+  .rule{display:flex;gap:13px;padding:11px 0;border-bottom:1px dashed var(--line);}
+  .rule:last-child{border-bottom:none;}
+  .rule .ri{
+    font-family:'Archivo Black',sans-serif;font-size:12px;color:var(--paper);
+    background:var(--rust);min-width:28px;height:28px;display:flex;
+    align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .rule .rt{font-size:14.5px;line-height:1.5;}
+  .rule .rt b{font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  .casebox{
+    border:1.5px dashed var(--steel);background:var(--paper-2);
+    padding:15px 18px;margin:16px 0;
+  }
+  .casebox h4{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--rust);margin-bottom:8px;
+  }
+  .casebox p{font-size:14px;line-height:1.55;margin-bottom:8px;}
+  .casebox p:last-child{margin-bottom:0;}
+  .teamline{margin:18px 0 6px;}
+  .teamline label{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--steel);font-weight:600;display:block;margin-bottom:6px;
+  }
+  .teamline input{
+    width:100%;font-family:'Spectral',serif;font-size:17px;
+    border:2px solid var(--ink);background:var(--paper);padding:10px 14px;color:var(--ink);
+  }
+  .teamline input:focus{outline:none;border-color:var(--rust);}
+
+  .qmeta{
+    display:flex;justify-content:space-between;align-items:baseline;
+    border-bottom:2px solid var(--ink);padding-bottom:6px;margin-bottom:4px;
+    flex-wrap:wrap;gap:8px;
+  }
+  .qmeta .qnum{
+    font-family:'Archivo Black',sans-serif;font-size:13px;color:var(--rust);letter-spacing:1px;
+  }
+  .qmeta .qact{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--steel);
+  }
+  .qchapter{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--rust);font-weight:700;margin:18px 0 4px;
+  }
+  .qsituation{font-size:16px;line-height:1.62;margin:10px 0 6px;}
+  .qsituation .em{
+    background:var(--ink);color:var(--paper);padding:1px 6px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;
+  }
+  .qprompt{
+    font-family:'Archivo Black',sans-serif;font-size:18px;line-height:1.2;
+    margin:16px 0 14px;letter-spacing:-0.3px;
+  }
+  .opt{
+    border:1.8px solid var(--ink);background:var(--paper-2);
+    margin-bottom:11px;cursor:pointer;display:flex;
+    transition:transform .08s,box-shadow .12s;
+  }
+  .opt:hover{transform:translateX(3px);box-shadow:-3px 3px 0 rgba(181,71,31,0.3);}
+  .opt.picked{border-color:var(--rust);background:var(--paper);box-shadow:-3px 3px 0 var(--rust);}
+  .opt .ol{
+    font-family:'Archivo Black',sans-serif;font-size:18px;
+    background:var(--steel);color:var(--paper);min-width:42px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .opt.picked .ol{background:var(--rust);}
+  .opt .ot{padding:12px 15px;font-size:14.5px;line-height:1.5;}
+  .opt .ot b{font-family:'IBM Plex Mono',monospace;font-size:13px;}
+  .hint{
+    font-family:'Spectral',serif;font-style:italic;font-size:13.5px;
+    color:var(--steel);border-left:3px solid var(--ochre);
+    padding:7px 0 7px 12px;margin:14px 0 6px;line-height:1.5;
+  }
+  .navrow{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:22px;border-top:2px solid var(--ink);padding-top:15px;gap:14px;
+  }
+  .lockmsg{
+    font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:0.5px;
+    color:var(--steel);max-width:60%;line-height:1.45;
+  }
+  .lockmsg b{color:var(--rust);}
+  .nextbtn{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:700;
+    text-transform:uppercase;letter-spacing:1.5px;background:var(--ink);
+    color:var(--paper);border:none;padding:13px 24px;cursor:pointer;
+    transition:background .15s;flex-shrink:0;
+  }
+  .nextbtn:hover:not(:disabled){background:var(--rust);}
+  .nextbtn:disabled{opacity:0.25;cursor:not-allowed;}
+  .startbtn{
+    font-family:'IBM Plex Mono',monospace;font-size:14px;font-weight:700;
+    text-transform:uppercase;letter-spacing:2px;background:var(--rust);
+    color:var(--paper);border:none;padding:15px 30px;cursor:pointer;
+    transition:background .15s;margin-top:8px;
+  }
+  .startbtn:hover{background:var(--rust-dark);}
+  .startbtn:disabled{opacity:0.35;cursor:not-allowed;background:var(--steel);}
+
+  .modal-bg{
+    display:none;position:fixed;inset:0;background:rgba(26,24,21,0.78);
+    z-index:200;align-items:center;justify-content:center;padding:24px;
+  }
+  .modal-bg.show{display:flex;}
+  .modal{
+    background:var(--paper);border:3px solid var(--ink);max-width:440px;
+    box-shadow:9px 9px 0 rgba(181,71,31,0.4);
+  }
+  .modal .mhead{
+    background:var(--rust);color:var(--paper);padding:12px 20px;
+    font-family:'Archivo Black',sans-serif;font-size:15px;text-transform:uppercase;
+    letter-spacing:0.3px;
+  }
+  .modal .mbody{padding:20px;}
+  .modal .mbody p{font-size:15px;line-height:1.55;margin-bottom:8px;}
+  .modal .mbody .pickrev{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--paper-2);
+    border:1.5px solid var(--ink);padding:10px 12px;margin:12px 0;line-height:1.45;
+  }
+  .modal .mbtns{display:flex;gap:10px;padding:0 20px 20px;}
+  .modal .mbtns button{
+    flex:1;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:700;
+    text-transform:uppercase;letter-spacing:1px;border:2px solid var(--ink);
+    padding:11px;cursor:pointer;transition:all .12s;
+  }
+  .modal .mbtns .cancel{background:var(--paper);color:var(--ink);}
+  .modal .mbtns .cancel:hover{background:var(--paper-3);}
+  .modal .mbtns .confirm{background:var(--ink);color:var(--paper);}
+  .modal .mbtns .confirm:hover{background:var(--rust);}
+
+  .res-head{text-align:center;margin-bottom:8px;}
+  .res-head .rk{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:3px;
+    text-transform:uppercase;color:var(--rust);font-weight:600;
+  }
+  .res-head h2{
+    font-family:'Archivo Black',sans-serif;font-size:clamp(24px,4vw,36px);
+    text-transform:uppercase;letter-spacing:-0.6px;line-height:0.95;margin:6px 0;
+  }
+  .res-team{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--steel);
+    text-align:center;margin-bottom:18px;
+  }
+  .levelcard{
+    border:2.5px solid var(--ink);margin:18px 0;box-shadow:6px 6px 0 rgba(26,24,21,0.16);
+  }
+  .levelcard .lvband{padding:16px 22px;color:var(--paper);}
+  .levelcard .lvband .lvt{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;opacity:0.85;
+  }
+  .levelcard .lvband .lvn{
+    font-family:'Archivo Black',sans-serif;font-size:26px;text-transform:uppercase;
+    letter-spacing:-0.4px;line-height:1;margin-top:4px;
+  }
+  .levelcard .lvband .lvs{
+    font-family:'Archivo Black',sans-serif;font-size:40px;line-height:1;margin-top:8px;
+  }
+  .levelcard .lvband .lvs small{font-size:18px;opacity:0.7;}
+  .levelcard .lvdesc{padding:15px 22px;background:var(--paper-2);font-size:14.5px;line-height:1.6;}
+
+  .scoregrid{margin:20px 0;}
+  .scorerow{
+    display:grid;grid-template-columns:170px 1fr 56px;gap:12px;align-items:center;
+    padding:11px 0;border-bottom:1px dashed var(--line);
+  }
+  .scorerow:last-child{border-bottom:none;}
+  .scorerow .sname{
+    font-family:'Archivo Black',sans-serif;font-size:12px;text-transform:uppercase;
+    letter-spacing:-0.2px;
+  }
+  .scorerow .sname small{
+    display:block;font-family:'Spectral',serif;font-weight:400;font-style:italic;
+    font-size:11px;text-transform:none;letter-spacing:0;color:var(--steel);margin-top:1px;
+  }
+  .sbar{height:18px;background:var(--paper-3);border:1.5px solid var(--ink);position:relative;}
+  .sbar-fill{height:100%;transition:width .8s ease;}
+  .scorerow .sval{
+    font-family:'Archivo Black',sans-serif;font-size:18px;text-align:right;
+    font-variant-numeric:tabular-nums;
+  }
+  .breakdown{
+    border:1.5px solid var(--ink);background:var(--paper-2);
+    padding:6px 18px 12px;margin:18px 0 0;
+  }
+  .bdrow{
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:9px 0;border-bottom:1px dashed var(--line);
+  }
+  .bdrow:last-of-type{border-bottom:none;}
+  .bdl{
+    font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:1px;
+    text-transform:uppercase;color:var(--steel);font-weight:600;
+  }
+  .bdv{
+    font-family:'Archivo Black',sans-serif;font-size:18px;
+    font-variant-numeric:tabular-nums;
+  }
+  .bdv.penalty{color:var(--rust);}
+  .bdnote{
+    font-family:'Spectral',serif;font-style:italic;font-size:12.5px;
+    color:var(--steel);line-height:1.5;padding-top:8px;
+  }
+  .totalrow{
+    display:flex;justify-content:space-between;align-items:center;
+    border:2.5px solid var(--ink);background:var(--ink);color:var(--paper);
+    padding:14px 22px;margin:18px 0;
+  }
+  .totalrow .tl{
+    font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  }
+  .totalrow .tv{font-family:'Archivo Black',sans-serif;font-size:34px;line-height:1;}
+  .totalrow .tv small{font-size:16px;opacity:0.6;}
+  .diagbox{border:2px solid var(--ink);background:var(--paper);padding:16px 20px;margin:16px 0;}
+  .diagbox h4{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--rust);margin-bottom:8px;
+  }
+  .diagbox p{font-size:14.5px;line-height:1.6;margin-bottom:8px;}
+  .diagbox p:last-child{margin-bottom:0;}
+  .codebox{
+    border:2.5px dashed var(--rust);background:var(--paper-2);padding:14px 18px;
+    margin:16px 0;text-align:center;
+  }
+  .codebox .ct{
+    font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--steel);margin-bottom:5px;
+  }
+  .codebox .cv{
+    font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:700;
+    letter-spacing:2px;color:var(--rust);word-break:break-all;
+  }
+  .res-actions{display:flex;gap:12px;margin:22px 0 8px;flex-wrap:wrap;}
+  .res-actions button{
+    flex:1;min-width:180px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;
+    font-weight:700;text-transform:uppercase;letter-spacing:1px;
+    border:2px solid var(--ink);padding:13px;cursor:pointer;transition:all .14s;
+  }
+  .res-actions .printbtn{background:var(--ink);color:var(--paper);}
+  .res-actions .printbtn:hover{background:var(--rust);}
+  .res-actions .copybtn{background:var(--paper);color:var(--ink);}
+  .res-actions .copybtn:hover{background:var(--paper-3);}
+  .handoff{
+    font-family:'Spectral',serif;font-style:italic;font-size:13px;color:var(--steel);
+    text-align:center;line-height:1.55;margin-top:6px;
+  }
+  .endmark{
+    text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10px;
+    letter-spacing:3px;color:var(--steel);margin-top:32px;text-transform:uppercase;
+  }
+  @media print{
+    body{background:#fff;background-image:none;}
+    .grain,header,.res-actions,.handoff{display:none!important;}
+    main{max-width:100%;padding:0;}
+    .screen{display:none!important;}
+    #s-result.show{display:block!important;}
+    .levelcard,.totalrow,.diagbox,.codebox{box-shadow:none;
+      -webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    .sbar-fill,.lvband,.totalrow{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+
+<header>
+  <div class="brand">
+    <div class="kicker">ITBA · Gestión de Empresas Familiares · Postigo / Moreno</div>
+    <h1>El Consejo de <span>Familia</span></h1>
+  </div>
+  <div class="header-right">
+    <div class="clock-wrap" id="clockWrap" style="display:none;">
+      <span class="clock-label">Tiempo</span>
+      <span class="clock-val" id="liveClock">00:00</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="progLabel">Briefing</div>
+      <div class="pbar"><div class="pbar-fill" id="pbar"></div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section class="screen show" id="s-intro">
+  <div class="introbox">
+    <div class="iband">
+      <div class="ik">Simulación competitiva · 30 decisiones · ~90 min</div>
+      <div class="it">Hierros Belgrano S.A.</div>
+    </div>
+    <div class="ibody">
+      <p>Su grupo acaba de ser contratado como <em>comité de dirección</em> de una empresa familiar en crisis. Durante las próximas 30 decisiones van a gobernar la transición de Hierros Belgrano de una generación a la siguiente. Cada decisión es real, difícil y tiene consecuencias.</p>
+
+      <div class="casebox">
+        <h4>El caso, en cinco líneas</h4>
+        <p>Metalúrgica fundada en 1961 por Don Antonio Ferrari, hoy en su 2ª generación (tres hermanos, un tercio de acciones cada uno) con siete primos en la 3ª. Factura USD 14M, 180 empleados, provee a terminales automotrices y agro.</p>
+        <p>Roberto, el único hermano que dirige la empresa, tiene 67 años y problemas de salud: quiere retirarse en 12 meses y <b>no hay sucesor</b>. El cliente que representa el 30% de la facturación exige una automatización de USD 2,5M en 18 meses. Dos accionistas viven de los dividendos y se oponen a reinvertir. No hay directorio, ni consejo de familia, ni protocolo.</p>
+      </div>
+
+      <div class="rules">
+        <div class="rule"><div class="ri">1</div><div class="rt"><b>No se puede volver atrás.</b> Una vez confirmada una decisión, la pantalla se bloquea para siempre. Debatan en grupo y tomen nota de lo importante antes de avanzar.</div></div>
+        <div class="rule"><div class="ri">2</div><div class="rt"><b>Las decisiones tienen trade-offs.</b> Casi ninguna opción es buena para todo. Ganar tranquilidad familiar puede costar competitividad; profesionalizar puede costar armonía. No hay opciones regaladas.</div></div>
+        <div class="rule"><div class="ri">3</div><div class="rt"><b>El puntaje está oculto.</b> Cada decisión suma a cinco variables que no verán hasta el final. Decidan por criterio, no por cálculo.</div></div>
+        <div class="rule"><div class="ri">4</div><div class="rt"><b>Es una competencia.</b> Al terminar recibirán una hoja de resultados con su puntaje y nivel. El docente comparará todos los grupos.</div></div>
+      </div>
+
+      <div class="teamline">
+        <label for="teamName">Nombre o número del grupo</label>
+        <input type="text" id="teamName" placeholder="Ej.: Grupo 4 — Los Ferrari" maxlength="40" autocomplete="off">
+      </div>
+      <button class="startbtn" id="startBtn" disabled>Comenzar la simulación →</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen" id="s-decision">
+  <div class="qmeta">
+    <span class="qnum" id="qNum">DECISIÓN 01 / 30</span>
+    <span class="qact" id="qAct">Acto I · La sucesión</span>
+  </div>
+  <div class="qchapter" id="qChapter"></div>
+  <div class="qsituation" id="qSituation"></div>
+  <div class="qprompt" id="qPrompt"></div>
+  <div id="qOptions"></div>
+  <div class="hint" id="qHint"></div>
+  <div class="navrow">
+    <div class="lockmsg" id="lockMsg">Elijan una opción para continuar. <b>No podrán volver.</b></div>
+    <button class="nextbtn" id="nextBtn" disabled>Confirmar y avanzar →</button>
+  </div>
+</section>
+
+<section class="screen" id="s-result">
+  <div class="res-head">
+    <div class="rk">Hoja de resultados · Hierros Belgrano S.A.</div>
+    <h2 id="resTitle">Diagnóstico final</h2>
+  </div>
+  <div class="res-team" id="resTeam">Grupo —</div>
+
+  <div class="levelcard">
+    <div class="lvband" id="lvBand">
+      <div class="lvt">Nivel alcanzado por el comité de dirección</div>
+      <div class="lvn" id="lvName">—</div>
+      <div class="lvs" id="lvScore">—<small>/100</small></div>
+    </div>
+    <div class="lvdesc" id="lvDesc">—</div>
+  </div>
+
+  <div class="scoregrid" id="scoreGrid"></div>
+
+  <div class="breakdown">
+    <div class="bdrow">
+      <span class="bdl">Puntaje por decisiones</span>
+      <span class="bdv" id="decScoreVal">—</span>
+    </div>
+    <div class="bdrow">
+      <span class="bdl">Tiempo total de resolución</span>
+      <span class="bdv" id="timeVal">—</span>
+    </div>
+    <div class="bdrow" id="penaltyRow" style="display:none;">
+      <span class="bdl">Penalización por tiempo</span>
+      <span class="bdv penalty" id="penaltyVal">—</span>
+    </div>
+    <div class="bdnote" id="timeNote">—</div>
+  </div>
+
+  <div class="totalrow">
+    <span class="tl">Puntaje total del grupo</span>
+    <span class="tv" id="totalVal">—<small>/100</small></span>
+  </div>
+
+  <div class="diagbox">
+    <h4>Lectura del diagnóstico</h4>
+    <div id="diagText"></div>
+  </div>
+
+  <div class="codebox">
+    <div class="ct">Código de resultado — dictar al docente</div>
+    <div class="cv" id="resultCode">—</div>
+  </div>
+
+  <div class="res-actions">
+    <button class="printbtn" id="printBtn">Descargar / imprimir hoja (PDF)</button>
+    <button class="copybtn" id="copyBtn">Copiar resumen al portapapeles</button>
+  </div>
+  <p class="handoff">Entreguen esta hoja al docente: pueden descargarla como PDF, dictar el código de resultado, o mostrar la pantalla. El docente recopila las hojas de todos los grupos para comparar.</p>
+
+  <p class="endmark">— Fin de la simulación · Hierros Belgrano S.A. —</p>
+</section>
+
+</main>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <div class="mhead">Confirmar decisión — es irreversible</div>
+    <div class="mbody">
+      <p>Una vez confirmada, esta pantalla se bloquea y no podrán volver. ¿El grupo está de acuerdo?</p>
+      <div class="pickrev" id="modalPick">—</div>
+      <p style="font-size:13px;color:var(--steel);font-style:italic;">Consejo: anoten en papel la decisión y el motivo antes de confirmar.</p>
+    </div>
+    <div class="mbtns">
+      <button class="cancel" id="modalCancel">Volver a debatir</button>
+      <button class="confirm" id="modalConfirm">Confirmar decisión</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const VARS = [
+  {k:'CON', name:'Continuidad',       sub:'sucesión y traspaso generacional', color:'#b5471f'},
+  {k:'GOB', name:'Gobierno',          sub:'órganos y reglas de decisión',     color:'#3d4751'},
+  {k:'PRO', name:'Profesionalización',sub:'gestión y talento',                color:'#c8941e'},
+  {k:'ARM', name:'Armonía familiar',  sub:'vínculos y conflicto',             color:'#4a5d3a'},
+  {k:'NEG', name:'Negocio',           sub:'competitividad y sostenibilidad',  color:'#8a3415'},
+];
+function s(con,gob,pro,arm,neg){return {CON:con,GOB:gob,PRO:pro,ARM:arm,NEG:neg};}
+
+/* ============================================================
+   DECISIONS v2 — vectores recalibrados para descorrelacionar
+   las 5 variables. Lógica por decisión:
+   - Opción EQUILIBRADA: positiva moderada en casi todo (+2..+4),
+     ningún negativo fuerte. Es la del "camino ideal".
+   - Opciones TRADE-OFF: suben fuerte 1-2 variables (+4..+6) pero
+     hunden otras (-3..-6). Maximizar una sola variable obliga a
+     tomar estas y por lo tanto destruye el resto.
+   - Opción POBRE: negativa o casi nula en todo.
+   Escala: cada opción reparte entre CON,GOB,PRO,ARM,NEG.
+   ============================================================ */
+const DECISIONS = [
+/* ---------- ACTO I — LA SUCESIÓN (1-7) ---------- */
+{
+ act:'Acto I · La sucesión', chapter:'El retiro de Roberto',
+ situation:'Roberto reúne a la familia. Tiene 67 años, su cardiólogo le pidió bajar el ritmo y quiere fijar una fecha de retiro. Es la primera vez que el tema se habla en serio.',
+ prompt:'¿Qué hace el comité con la fecha de retiro?',
+ hint:'Una fecha sin plan es tan riesgosa como no tener fecha. Pero un plan sin fecha nunca arranca.',
+ options:[
+  {t:'<b>Fijar retiro en 18 meses</b> y abrir de inmediato un proceso formal de sucesión con etapas y responsables.', sc:s(4,3,2,1,2)},
+  {t:'<b>Dejar que Roberto decida cuándo</b> "se sienta listo": él construyó la empresa, es su derecho.', sc:s(-5,-3,-2,5,-1)},
+  {t:'<b>Retiro inmediato en 3 meses</b> para forzar la transición de una vez.', sc:s(2,1,1,-5,-4)},
+  {t:'<b>Posponer la conversación</b> hasta que mejore la salud y el contexto económico.', sc:s(-4,-3,-2,2,-3)},
+ ]
+},
+{
+ act:'Acto I · La sucesión', chapter:'Los candidatos',
+ situation:'Aparecen dos nombres. Lucía (hija de Roberto, ingeniera, gerenta de Operaciones, 12 años en la empresa). Y Andrés Paz, gerente de planta no familiar, sin acciones, a quien la terminal automotriz respeta y que domina la transformación tecnológica que viene.',
+ prompt:'¿A quién designa el comité como sucesor para conducir la empresa?',
+ hint:'El apellido no garantiza capacidad. Pero un externo al mando cambia la naturaleza de la empresa familiar. ¿Y si la pregunta no fuera "uno u otro"?',
+ options:[
+  {t:'<b>Lucía como CEO, Andrés como Director de Operaciones</b> con mandato y autoridad reales sobre la modernización.', sc:s(4,2,3,2,3)},
+  {t:'<b>Lucía como CEO</b>, sin más: es de la familia, se lo ganó y conoce la planta.', sc:s(3,-1,-3,4,-2)},
+  {t:'<b>Andrés como CEO externo</b>: es el más capaz y la familia ya demostró que no se pone de acuerdo.', sc:s(-2,1,6,-6,4)},
+  {t:'<b>Co-dirección Lucía + Andrés</b> con poderes iguales y sin jerarquía definida.', sc:s(-3,-4,1,-1,-3)},
+ ]
+},
+{
+ act:'Acto I · La sucesión', chapter:'El criterio de elección',
+ situation:'Hugo, dolido desde su salida en 2018, exige saber con qué criterio se eligió al sucesor. "¿Por sangre o por capacidad?" La familia se tensa.',
+ prompt:'¿Cómo fundamenta el comité la elección del sucesor?',
+ hint:'Un criterio escrito y público protege a quien fue elegido tanto como a quien no.',
+ options:[
+  {t:'<b>Definir y publicar un perfil de competencias</b> para el rol de CEO, contra el cual se evaluó a los candidatos.', sc:s(3,4,3,2,1)},
+  {t:'<b>"Lo decidió Roberto, que sabe"</b>: cuestionarlo es faltarle el respeto al fundador de hecho.', sc:s(-2,-5,-4,3,-1)},
+  {t:'<b>Votación entre los tres accionistas</b>, mayoría simple, sin perfil previo.', sc:s(1,1,-2,-3,0)},
+  {t:'<b>Contratar una consultora</b> que evalúe a ambos y entregue un dictamen vinculante.', sc:s(1,3,4,-2,1)},
+ ]
+},
+{
+ act:'Acto I · La sucesión', chapter:'El miedo a soltar',
+ situation:'Roberto acepta la transición… pero propone quedarse "dos o tres años como asesor con firma autorizada en el banco". Todos saben qué significa eso.',
+ prompt:'¿Qué rol post-retiro define el comité para Roberto?',
+ hint:'El fundador que no suelta vacía de autoridad al sucesor. Pero su experiencia también es un activo. La clave está en los límites.',
+ options:[
+  {t:'<b>Presidente honorario sin firma ni poder operativo</b>, con un rol de mentor formal y acotado del sucesor.', sc:s(4,3,3,2,2)},
+  {t:'<b>Asesor con firma bancaria</b> por tres años: su experiencia es irreemplazable y la familia se queda tranquila.', sc:s(-6,-4,-4,4,-2)},
+  {t:'<b>Salida total y limpia</b>: corta todo vínculo operativo desde el día uno.', sc:s(3,1,2,-5,-2)},
+  {t:'<b>Sin definir el rol ahora</b>: "se irá viendo cómo se siente cada uno".', sc:s(-4,-4,-2,1,-2)},
+ ]
+},
+{
+ act:'Acto I · La sucesión', chapter:'Preparar al sucesor',
+ situation:'El sucesor designado no llega "listo" automáticamente. Hay 18 meses por delante antes del retiro de Roberto.',
+ prompt:'¿Cómo usa el comité esos 18 meses de transición?',
+ hint:'La sucesión es un proceso, no un acto. ¿Se diseña o se improvisa?',
+ options:[
+  {t:'<b>Plan de traspaso por etapas</b>: el sucesor asume áreas crecientes con hitos medibles y mentoría de Roberto.', sc:s(5,2,3,2,2)},
+  {t:'<b>Que el sucesor "vaya aprendiendo en el cargo"</b> una vez que Roberto se vaya.', sc:s(-4,-3,-3,0,-4)},
+  {t:'<b>Curso ejecutivo intensivo</b> fuera de la empresa, sin cambios internos hasta el retiro.', sc:s(0,-1,4,1,-1)},
+  {t:'<b>Rotación del sucesor por todas las áreas</b> sin asumir responsabilidad de gestión todavía.', sc:s(2,-1,2,1,-1)},
+ ]
+},
+{
+ act:'Acto I · La sucesión', chapter:'La voz de la 3ª generación',
+ situation:'Sofía (29, hija de Hugo, ya trabaja en Administración) plantea algo incómodo: hay siete primos en su generación y ninguna regla sobre cómo se entra, evalúa o promueve a un familiar.',
+ prompt:'¿Qué responde el comité sobre el ingreso de la próxima generación?',
+ hint:'El reto de la tercera generación no se resuelve cuando explota: se previene antes.',
+ options:[
+  {t:'<b>Redactar reglas de ingreso de familiares</b> ahora: requisitos de formación, experiencia externa previa y evaluación por desempeño.', sc:s(3,4,3,2,1)},
+  {t:'<b>"La puerta está abierta para todo Ferrari"</b> que quiera trabajar: es una empresa familiar.', sc:s(-3,-4,-5,4,-3)},
+  {t:'<b>Decidir caso por caso</b> cuando cada primo lo pida, sin reglas generales.', sc:s(-2,-3,-2,1,0)},
+  {t:'<b>Cerrar el ingreso de nuevos familiares</b> por completo: solo gestión profesional de acá en más.', sc:s(-1,1,4,-5,2)},
+ ]
+},
+{
+ act:'Acto I · La sucesión', chapter:'El hermano que se fue dolido',
+ situation:'Hugo dejó la empresa en 2018 tras una pelea fuerte con Roberto y nunca volvieron a hablarlo de verdad. Sigue siendo dueño de un tercio y su rencor contamina cada reunión. El comité sabe que sin reparar ese vínculo, ninguna decisión va a sostenerse.',
+ prompt:'¿Qué hace el comité con el conflicto histórico entre Roberto y Hugo?',
+ hint:'Una herida vieja que no se nombra no desaparece: se infiltra en cada decisión nueva.',
+ options:[
+  {t:'<b>Encarar una conversación facilitada</b> entre los hermanos, con un tercero neutral, antes de seguir con las decisiones de fondo.', sc:s(3,3,1,5,1)},
+  {t:'<b>Ignorar el tema</b>: son cosas viejas, lo importante es la empresa de hoy.', sc:s(-2,-2,-1,-5,-1)},
+  {t:'<b>Pedir a Hugo que se retire de las reuniones</b> hasta que "baje un cambio".', sc:s(-2,-3,0,-5,-1)},
+  {t:'<b>Que Roberto le pida disculpas en público</b> sin más, para cerrar el tema rápido.', sc:s(0,-1,-1,1,0)},
+ ]
+},
+/* ---------- ACTO II — EL DINERO (8-14) ---------- */
+{
+ act:'Acto II · El dinero', chapter:'Dividendos vs. reinversión',
+ situation:'La terminal automotriz exige una línea automatizada en 18 meses: USD 2,5M. Si no se invierte, se pierde el 30% de la facturación. Pero Marta y Tomás viven de los dividendos y se oponen frontalmente.',
+ prompt:'¿Qué decide el comité sobre las ganancias del próximo ejercicio?',
+ hint:'Repartir todo hoy puede dejar sin empresa que repartir mañana. Pero ignorar a los accionistas pasivos rompe la sociedad.',
+ options:[
+  {t:'<b>Reinvertir la mayor parte</b> pero pactar un dividendo mínimo garantizado para los pasivos, comunicándolo con cifras.', sc:s(2,3,2,3,4)},
+  {t:'<b>Reinvertir el 100%</b> de las ganancias: la supervivencia del negocio no se negocia.', sc:s(1,-1,3,-6,6)},
+  {t:'<b>Repartir dividendos como siempre</b> y descartar la automatización: la familia es lo primero.', sc:s(-3,-2,-4,4,-6)},
+  {t:'<b>Postergar la decisión un año</b> a ver si el cliente cede o aparece financiamiento.', sc:s(-3,-3,-3,0,-4)},
+ ]
+},
+{
+ act:'Acto II · El dinero', chapter:'Cómo financiar la inversión',
+ situation:'Aun reinvirtiendo, faltan fondos para los USD 2,5M. Hay que decidir de dónde sale la diferencia.',
+ prompt:'¿Cómo financia el comité la automatización?',
+ hint:'Cada fuente de capital trae consigo una forma distinta de poder y de riesgo.',
+ options:[
+  {t:'<b>Mix de crédito bancario y aporte proporcional de accionistas</b>, con un plan financiero a 5 años revisado por el directorio.', sc:s(2,3,2,2,3)},
+  {t:'<b>Endeudamiento bancario total</b>: rápido y la familia no pone un peso ni cede control.', sc:s(0,-1,1,2,-3)},
+  {t:'<b>Entrada de un socio inversor externo</b> con el 20% del paquete accionario.', sc:s(-2,1,4,-5,4)},
+  {t:'<b>Hacerlo por etapas con caja propia</b> aunque tarde el doble y el cliente quede en riesgo.', sc:s(-1,0,-1,2,-5)},
+ ]
+},
+{
+ act:'Acto II · El dinero', chapter:'Marta amenaza con vender',
+ situation:'Marta, que se siente "socia de segunda", desliza que evalúa vender su tercio de las acciones. Un comprador externo del 33% sería un sismo para la empresa.',
+ prompt:'¿Cómo reacciona el comité ante la posible salida de Marta?',
+ hint:'A veces "quiero vender" significa "quiero que me escuchen". Pero la empresa necesita protegerse igual.',
+ options:[
+  {t:'<b>Abrir un canal real de participación para Marta</b> y a la vez redactar un acuerdo de accionistas con cláusula de preferencia de compra.', sc:s(2,4,1,3,2)},
+  {t:'<b>Comprarle la parte ya</b>, aunque haya que endeudarse fuerte para hacerlo.', sc:s(2,1,0,1,-4)},
+  {t:'<b>Dejarla vender a quien quiera</b>: es su derecho como propietaria.', sc:s(-4,-3,1,-5,-3)},
+  {t:'<b>Presionarla familiarmente</b> para que no venda, sin cambiar nada de fondo.', sc:s(-1,-3,-2,-5,0)},
+ ]
+},
+{
+ act:'Acto II · El dinero', chapter:'El sueldo de los que trabajan',
+ situation:'Lucía y Sofía trabajan en la empresa y cobran sueldos fijados "a ojo" por Roberto. Tomás, que no trabaja, pregunta por qué ellas cobran sueldo además de dividendos.',
+ prompt:'¿Qué política de remuneración define el comité para los familiares que trabajan?',
+ hint:'Mezclar sueldo (por trabajo) con dividendo (por propiedad) es una de las fuentes clásicas de conflicto.',
+ options:[
+  {t:'<b>Sueldos de mercado según el rol</b>, auditados externamente, separados con claridad de los dividendos por propiedad.', sc:s(2,4,4,2,2)},
+  {t:'<b>Que cada familiar cobre lo mismo</b> trabaje donde trabaje: así nadie se ofende.', sc:s(-1,-3,-5,4,-3)},
+  {t:'<b>Mantener el criterio de Roberto</b>: él sabe lo que cada uno aporta.', sc:s(-2,-4,-3,2,-1)},
+  {t:'<b>Bajar todos los sueldos familiares al mínimo</b> y compensar vía dividendos.', sc:s(-1,-2,-3,-3,1)},
+ ]
+},
+{
+ act:'Acto II · El dinero', chapter:'El primo que vive afuera',
+ situation:'Tomás vive en España, nunca trabajó en la empresa y solo cobra dividendos. Pide, además, que la empresa le financie un emprendimiento propio "porque es de la familia".',
+ prompt:'¿Cómo responde el comité al pedido de Tomás?',
+ hint:'Una familia empresaria de tercera generación necesita pensar el patrimonio más allá de la empresa operativa.',
+ options:[
+  {t:'<b>Crear un fondo familiar de nuevos emprendimientos</b> con reglas claras de acceso, evaluación y retorno para toda la generación.', sc:s(3,4,2,3,2)},
+  {t:'<b>Financiarle el proyecto directamente</b> desde la caja de la empresa: es un Ferrari.', sc:s(-2,-5,-3,3,-4)},
+  {t:'<b>Negarse sin más</b>: la empresa no es un banco de la familia.', sc:s(0,1,2,-4,2)},
+  {t:'<b>Derivar el pedido a Roberto</b> para que lo resuelva en privado con Tomás.', sc:s(-2,-4,-2,0,-1)},
+ ]
+},
+{
+ act:'Acto II · El dinero', chapter:'Transparencia de la información',
+ situation:'Marta y Tomás reclaman algo básico: nunca vieron un balance de la empresa de la que poseen un tercio. La información financiera circula solo entre quienes trabajan adentro.',
+ prompt:'¿Qué decide el comité sobre el acceso a la información?',
+ hint:'La opacidad alimenta la desconfianza. La transparencia es la base de cualquier órgano de gobierno.',
+ options:[
+  {t:'<b>Reporte financiero formal y periódico</b> para todos los accionistas, presentado en asamblea.', sc:s(2,4,3,3,2)},
+  {t:'<b>Compartir información solo si la piden</b> expresamente y caso por caso.', sc:s(-1,-2,0,-2,0)},
+  {t:'<b>Mantenerla reservada</b> a quienes gestionan: "los de afuera no entienden los números".', sc:s(-2,-5,-1,-5,-1)},
+  {t:'<b>Contratar auditoría externa anual</b> y publicar solo sus conclusiones, sin detalle.', sc:s(1,2,3,0,1)},
+ ]
+},
+{
+ act:'Acto II · El dinero', chapter:'La casa de fin de semana de la empresa',
+ situation:'La empresa es dueña de una quinta en las afueras que Don Antonio compró en los 80. La usa la familia para los asados, figura en los libros como activo de Hierros Belgrano y nadie paga por usarla. Un accionista pregunta por qué la empresa carga ese gasto.',
+ prompt:'¿Qué decide el comité sobre los activos de uso familiar?',
+ hint:'Cuando el patrimonio de la empresa y el de la familia se mezclan, los dos terminan perdiendo claridad.',
+ options:[
+  {t:'<b>Separar el activo</b>: la familia lo compra o alquila a valor de mercado, y la empresa deja de cargar el gasto.', sc:s(2,4,3,1,3)},
+  {t:'<b>Dejar todo como está</b>: la quinta es parte de la historia familiar, no se toca.', sc:s(-2,-4,-2,3,-2)},
+  {t:'<b>Vender la quinta</b> de inmediato y repartir lo recaudado entre los accionistas.', sc:s(-1,0,1,-3,0)},
+  {t:'<b>Pasarla a nombre de un solo hermano</b> para sacarla de los libros sin más trámite.', sc:s(-2,-3,-2,-2,-1)},
+ ]
+},
+/* ---------- ACTO III — LAS REGLAS (15-22) ---------- */
+{
+ act:'Acto III · Las reglas', chapter:'¿Gobierno o asado?',
+ situation:'Hasta hoy todo se decidió "hablando en el asado del domingo". No hay directorio con funciones, ni consejo de familia, ni asamblea formal.',
+ prompt:'¿Qué estructura de gobierno crea el comité?',
+ hint:'Confundir la mesa familiar con la mesa de decisiones es el origen de la mayoría de los conflictos.',
+ options:[
+  {t:'<b>Tres órganos diferenciados</b>: Directorio (empresa), Consejo de Familia (familia) y Asamblea de Accionistas (propiedad), cada uno con su función.', sc:s(3,5,3,2,2)},
+  {t:'<b>Solo un directorio</b>: la familia se sigue resolviendo informalmente como siempre.', sc:s(-1,0,3,-3,1)},
+  {t:'<b>Seguir con el asado</b>: funcionó 60 años, formalizar es burocracia.', sc:s(-3,-6,-3,3,-2)},
+  {t:'<b>Solo un consejo de familia</b>, sin directorio: lo importante es que la familia esté unida.', sc:s(-1,-1,-4,4,-3)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'Quién se sienta en el directorio',
+ situation:'Hay que componer el directorio. La familia quiere los puestos; pero un directorio solo de Ferraris repite los problemas de siempre.',
+ prompt:'¿Cómo integra el comité el directorio?',
+ hint:'Un consejero independiente bien elegido vale por su mirada externa, no por su voto.',
+ options:[
+  {t:'<b>Mayoría familiar + 2 directores independientes</b> con experiencia en la industria y voz real.', sc:s(2,4,3,2,3)},
+  {t:'<b>Solo miembros de la familia</b>: los temas de los Ferrari los deciden los Ferrari.', sc:s(-1,-3,-4,4,-2)},
+  {t:'<b>Mayoría de independientes</b> y familia en minoría: máxima profesionalización.', sc:s(-3,2,5,-5,3)},
+  {t:'<b>Un puesto por cada rama familiar</b>, sin externos, para que nadie quede afuera.', sc:s(0,-1,-3,3,-2)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'El protocolo familiar',
+ situation:'Sofía insiste: hace falta un protocolo familiar escrito. Hugo desconfía ("papeles que nadie cumple"); Roberto teme que "formalizar" sea admitir que la familia está rota.',
+ prompt:'¿Qué hace el comité con el protocolo familiar?',
+ hint:'Un protocolo no se redacta en una tarde ni lo escribe un abogado solo: se construye conversando.',
+ options:[
+  {t:'<b>Proceso participativo de 6 meses</b> para redactar el protocolo: lo discuten todas las generaciones y luego lo firman.', sc:s(3,4,2,3,1)},
+  {t:'<b>Encargarle a un abogado</b> un protocolo estándar y que la familia solo lo firme.', sc:s(0,2,2,-3,0)},
+  {t:'<b>No hacer protocolo</b>: genera más conflicto del que evita.', sc:s(-3,-5,-2,-1,-1)},
+  {t:'<b>Un acuerdo informal de palabra</b> entre los tres hermanos, sin documento.', sc:s(-2,-4,-2,3,-1)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'Resolver los conflictos futuros',
+ situation:'El comité sabe que habrá nuevos desacuerdos. La pregunta es qué mecanismo tendrá la familia para procesarlos sin romperse.',
+ prompt:'¿Qué mecanismo de resolución de conflictos adopta el comité?',
+ hint:'Las empresas familiares maduras no son las que no tienen conflicto: son las que aprendieron a gobernarlo.',
+ options:[
+  {t:'<b>Protocolo de escalamiento</b>: primero el consejo de familia, luego un mediador externo acordado, definido por anticipado.', sc:s(3,5,2,3,1)},
+  {t:'<b>Que Roberto medie</b> mientras viva, como hizo siempre.', sc:s(-4,-3,-2,3,-1)},
+  {t:'<b>Mayoría accionaria decide</b> y punto: el que tiene más votos gana.', sc:s(0,1,2,-5,1)},
+  {t:'<b>Resolver cada conflicto cuando aparezca</b>, sin mecanismo previo.', sc:s(-2,-5,-2,-1,-1)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'La cláusula de salida',
+ situation:'¿Qué pasa si un accionista quiere irse? Hoy no hay regla. Sin una, cualquier venta puede terminar con un extraño dueño de un tercio de la empresa.',
+ prompt:'¿Qué define el comité sobre la compraventa de acciones?',
+ hint:'Las reglas de salida se pactan cuando todos están tranquilos, no en medio de la pelea.',
+ options:[
+  {t:'<b>Cláusula de preferencia + método de valuación pactado</b>: si alguien vende, la familia tiene prioridad a precio justo predefinido.', sc:s(3,5,2,3,2)},
+  {t:'<b>Prohibir la venta de acciones</b> a no-familiares de forma absoluta.', sc:s(0,1,-3,1,-2)},
+  {t:'<b>Libre venta a cualquiera</b>: la propiedad es propiedad.', sc:s(-3,-3,2,-4,-1)},
+  {t:'<b>No legislar el tema</b>: "ningún Ferrari vendería jamás".', sc:s(-3,-5,-2,1,-1)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'Misión, visión y valores',
+ situation:'La declaración de misión y valores es la de Don Antonio, de 1961. Nadie la revisó nunca. Algunos la sienten sagrada; otros, una pieza de museo.',
+ prompt:'¿Qué hace el comité con la identidad fundacional?',
+ hint:'El legado se honra actualizándolo, no embalsamándolo.',
+ options:[
+  {t:'<b>Revisar misión y valores con toda la familia</b>, conservando el espíritu de Don Antonio pero adaptándolos a hoy.', sc:s(3,2,2,4,2)},
+  {t:'<b>Dejar intacta la declaración de 1961</b>: tocarla es traicionar al fundador.', sc:s(-2,-2,-3,3,-2)},
+  {t:'<b>Reescribirla por completo</b> con una consultora de branding, partiendo de cero.', sc:s(-2,0,2,-4,2)},
+  {t:'<b>Eliminar la declaración</b>: son frases que nadie aplica.', sc:s(-2,-2,-1,-4,0)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'El reglamento del directorio',
+ situation:'El comité acordó crear un directorio, pero todavía es una cáscara: no hay reglas sobre cada cuánto se reúne, cómo se documenta lo que decide ni qué pasa si un director falta sistemáticamente.',
+ prompt:'¿Cómo pone en funcionamiento real el comité al directorio?',
+ hint:'Un órgano de gobierno sin reglas de funcionamiento es un nombre en un papel, no un órgano.',
+ options:[
+  {t:'<b>Reglamento de funcionamiento</b>: calendario fijo de reuniones, actas obligatorias, quórum y consecuencias por inasistencia.', sc:s(2,5,3,1,2)},
+  {t:'<b>Que el directorio se reúna "cuando haga falta"</b>, sin calendario ni actas.', sc:s(-1,-4,-2,0,-1)},
+  {t:'<b>Reuniones formales pero sin registrar nada por escrito</b>, para tener libertad.', sc:s(-1,-3,-1,1,-1)},
+  {t:'<b>Delegar el funcionamiento en el presidente</b>: que él convoque y decida el formato.', sc:s(-1,-2,0,0,0)},
+ ]
+},
+{
+ act:'Acto III · Las reglas', chapter:'Política de empleo de parientes políticos',
+ situation:'El novio de una prima quiere entrar a trabajar en la empresa. Es la primera vez que se plantea el tema de los parientes políticos —yernos, nueras, cuñados— y no hay ninguna regla al respecto.',
+ prompt:'¿Qué política adopta el comité sobre los parientes políticos?',
+ hint:'Las reglas más útiles son las que se escriben antes del primer caso, no después.',
+ options:[
+  {t:'<b>Política escrita y pareja</b>: los parientes políticos pueden trabajar bajo los mismos requisitos y evaluación que cualquier otro postulante.', sc:s(2,4,4,2,1)},
+  {t:'<b>Prohibir el ingreso de parientes políticos</b> de forma absoluta, sin excepciones.', sc:s(0,1,0,-3,0)},
+  {t:'<b>Resolverlo en familia caso por caso</b>, según quién lo pida y el clima del momento.', sc:s(-2,-4,-3,1,-1)},
+  {t:'<b>Dejar que cada gerente familiar</b> contrate a quien quiera en su área.', sc:s(-2,-3,-3,0,-2)},
+ ]
+},
+/* ---------- ACTO IV — EL FUTURO (23-30) ---------- */
+{
+ act:'Acto IV · El futuro', chapter:'La estrategia de crecimiento',
+ situation:'Resuelta la sucesión y el gobierno, el comité debe definir hacia dónde va la empresa los próximos cinco años.',
+ prompt:'¿Qué estrategia de crecimiento adopta el comité?',
+ hint:'Crecer sin foco dispersa; no crecer en una industria que se moderniza es retroceder.',
+ options:[
+  {t:'<b>Foco en automatizar y subir de gama</b> con los clientes actuales, creciendo de forma sostenida y financiable.', sc:s(3,2,3,2,4)},
+  {t:'<b>Diversificar agresivamente</b> a tres rubros nuevos a la vez para no depender del cliente del 30%.', sc:s(-2,-1,2,-3,3)},
+  {t:'<b>Mantener todo igual</b>: la empresa funciona, no hay que arriesgar.', sc:s(-2,0,-3,3,-5)},
+  {t:'<b>Vender la empresa</b> mientras vale y repartir el capital entre la familia.', sc:s(-6,0,1,-3,-3)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'El cliente que concentra el 30%',
+ situation:'Depender en un 30% de un solo cliente es un riesgo estructural, lo resuelva o no la automatización.',
+ prompt:'¿Cómo gestiona el comité esa concentración de riesgo?',
+ hint:'Reducir el riesgo no significa pelearse con el cliente que hoy paga los sueldos.',
+ options:[
+  {t:'<b>Retener al cliente clave y a la vez desarrollar nuevos mercados</b> para bajar la dependencia gradualmente.', sc:s(2,2,3,2,5)},
+  {t:'<b>No hacer nada</b>: el cliente lleva años, no se va a ir.', sc:s(-2,-2,-3,1,-5)},
+  {t:'<b>Cortar con el cliente</b> para forzar a la empresa a diversificar de golpe.', sc:s(-2,0,1,-3,-6)},
+  {t:'<b>Aceptar todas sus condiciones</b> con tal de no perderlo, sin buscar otros.', sc:s(-1,-2,-2,1,-2)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'Talento no familiar',
+ situation:'La empresa necesita gerentes de primer nivel. Pero los profesionales externos talentosos dudan en entrar: temen el "techo de cristal del apellido".',
+ prompt:'¿Cómo atrae y retiene el comité talento no familiar?',
+ hint:'Si los mejores puestos están reservados por sangre, los mejores externos no vienen.',
+ options:[
+  {t:'<b>Carrera y puestos de dirección abiertos por mérito</b> también para no-familiares, con reglas explícitas.', sc:s(2,3,4,2,3)},
+  {t:'<b>Buenos sueldos pero techo claro</b>: la dirección queda para la familia.', sc:s(-1,-1,-3,2,-2)},
+  {t:'<b>Contratar externos solo para puestos técnicos</b>, nunca de conducción.', sc:s(-1,-2,-4,2,-2)},
+  {t:'<b>Cubrir todo con familia</b> y formar a los primos para los puestos clave.', sc:s(0,-3,-5,4,-3)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'Preparar a la próxima generación',
+ situation:'Los siete primos de la 3ª generación son el futuro. Hoy no hay ningún plan para formarlos como propietarios responsables, trabajen o no en la empresa.',
+ prompt:'¿Qué define el comité para la 3ª generación?',
+ hint:'Ser dueño se aprende. Un accionista formado es distinto de uno que solo cobra.',
+ options:[
+  {t:'<b>Programa de formación de propietarios</b>: educación en gobierno, finanzas y rol del accionista para los siete primos.', sc:s(5,3,2,3,2)},
+  {t:'<b>Solo formar a los primos que trabajen</b> en la empresa; al resto le basta cobrar.', sc:s(0,-1,2,-2,1)},
+  {t:'<b>No hacer nada todavía</b>: son jóvenes, ya habrá tiempo.', sc:s(-4,-2,-2,0,-2)},
+  {t:'<b>Que cada rama familiar</b> forme a los suyos como quiera.', sc:s(-2,-3,-1,1,-1)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'El patrimonio más allá de la empresa',
+ situation:'Casi todo el patrimonio de la familia está dentro de una sola empresa. Si a la empresa le va mal, a la familia entera le va mal.',
+ prompt:'¿Cómo aborda el comité el riesgo patrimonial de la familia?',
+ hint:'La familia empresaria madura piensa el patrimonio, no solo la empresa.',
+ options:[
+  {t:'<b>Plan de diversificación patrimonial gradual</b>: parte de los dividendos va a inversiones fuera de la empresa.', sc:s(3,3,2,2,3)},
+  {t:'<b>Reinvertir absolutamente todo</b> en la empresa: es lo único que la familia sabe hacer.', sc:s(-1,-1,0,-2,3)},
+  {t:'<b>Que cada familiar se arregle solo</b> con su patrimonio personal.', sc:s(-2,-3,1,-3,0)},
+  {t:'<b>Vender parte de la empresa</b> para repartir capital y que cada uno invierta por su cuenta.', sc:s(-4,-1,1,-2,-2)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'Una crisis a mitad de camino',
+ situation:'En plena transición, una recesión golpea al sector: las ventas caen 20% en un trimestre. La automatización está a mitad de pago y el directorio recién formado enfrenta su primera prueba real bajo presión.',
+ prompt:'¿Cómo responde el comité a la crisis sin desarmar lo construido?',
+ hint:'Las estructuras de gobierno se prueban en la tormenta, no en la calma. La tentación es saltearlas "porque es urgente".',
+ options:[
+  {t:'<b>Convocar al directorio formal</b> para decidir un plan de contingencia, sosteniendo los órganos creados aun bajo presión.', sc:s(3,5,3,2,3)},
+  {t:'<b>Que Roberto vuelva a tomar el control</b> "hasta que pase la tormenta": ya manejó otras crisis.', sc:s(-5,-4,-3,2,-1)},
+  {t:'<b>Frenar toda la reforma de gobierno</b> y volver a decidir rápido entre los hermanos.', sc:s(-3,-5,-2,0,-1)},
+  {t:'<b>Recortar de forma drástica e inmediata</b> sin pasar por el directorio, para ganar tiempo.', sc:s(-1,-3,0,-3,-2)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'Medir si todo esto funcionó',
+ situation:'El comité diseñó sucesión, gobierno, reglas y estrategia. Pero nada garantiza que se cumpla. La pregunta es cómo sabrá la familia, dentro de unos años, si la transición realmente funcionó.',
+ prompt:'¿Qué mecanismo de seguimiento define el comité?',
+ hint:'Lo que no se revisa, no se sostiene. Un plan sin puntos de control es una expresión de deseo.',
+ options:[
+  {t:'<b>Revisión anual con indicadores</b> de empresa y de familia, presentada en asamblea, que puede corregir el rumbo.', sc:s(4,4,3,3,3)},
+  {t:'<b>Confiar en que el sucesor avise</b> si algo no funciona, sin instancia formal.', sc:s(-2,-3,-2,-1,-1)},
+  {t:'<b>Revisar solo los números de la empresa</b>, dejando afuera la dimensión familiar.', sc:s(-1,-1,1,-3,1)},
+  {t:'<b>Dar el tema por cerrado</b>: las decisiones ya se tomaron, no hace falta volver sobre ellas.', sc:s(-3,-4,-2,-2,-2)},
+ ]
+},
+{
+ act:'Acto IV · El futuro', chapter:'La decisión final del comité',
+ situation:'Última reunión. El comité debe decidir cómo deja documentada y comunicada toda la transición que diseñó, para que sobreviva a sus propios miembros.',
+ prompt:'¿Cómo cierra el comité su trabajo?',
+ hint:'Un buen plan que nadie conoce ni se compromete a sostener no es un plan: es un papel.',
+ options:[
+  {t:'<b>Plan integral firmado y comunicado</b> a toda la familia, con responsables, plazos y revisión anual por el directorio.', sc:s(4,4,3,3,3)},
+  {t:'<b>Guardar las decisiones</b> entre los tres hermanos y comunicarlas "cuando haga falta".', sc:s(-3,-4,-2,-3,-2)},
+  {t:'<b>Anunciar las conclusiones</b> en el asado del domingo, sin documento ni seguimiento.', sc:s(-2,-5,-3,1,-2)},
+  {t:'<b>Delegar todo en el sucesor</b>: que él decida qué hacer con el plan una vez en el cargo.', sc:s(-1,-3,-1,-2,-1)},
+ ]
+},
+];
+
+const TOTAL = DECISIONS.length;
+const totals = {CON:0,GOB:0,PRO:0,ARM:0,NEG:0};
+let idx = 0, picked = null, teamName = '';
+let startTime = null, endTime = null, clockTick = null;
+const el = id => document.getElementById(id);
+
+/* ---- cronómetro ---- */
+function fmtClock(ms){
+  const tot = Math.floor(ms/1000);
+  const m = Math.floor(tot/60), s = tot%60;
+  return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function startClock(){
+  startTime = Date.now();
+  clockTick = setInterval(()=>{
+    const live = el('liveClock');
+    if(live) live.textContent = fmtClock(Date.now()-startTime);
+  }, 1000);
+}
+function stopClock(){
+  endTime = Date.now();
+  if(clockTick){ clearInterval(clockTick); clockTick = null; }
+  return endTime - startTime;
+}
+
+el('teamName').addEventListener('input', e=>{
+  el('startBtn').disabled = e.target.value.trim().length < 2;
+});
+el('startBtn').addEventListener('click', ()=>{
+  teamName = el('teamName').value.trim();
+  el('s-intro').classList.remove('show');
+  el('s-decision').classList.add('show');
+  el('clockWrap').style.display = 'flex';
+  startClock();
+  renderDecision();
+});
+
+function updateProgress(){
+  el('pbar').style.width = ((idx/TOTAL)*100) + '%';
+  el('progLabel').textContent = 'Decisión ' + (idx+1) + ' de ' + TOTAL;
+}
+
+function renderDecision(){
+  const d = DECISIONS[idx];
+  picked = null;
+  updateProgress();
+  el('qNum').textContent = 'DECISIÓN ' + String(idx+1).padStart(2,'0') + ' / ' + TOTAL;
+  el('qAct').textContent = d.act;
+  el('qChapter').textContent = d.chapter;
+  el('qSituation').innerHTML = d.situation;
+  el('qPrompt').textContent = d.prompt;
+  el('qHint').textContent = d.hint;
+
+  const box = el('qOptions');
+  box.innerHTML = '';
+  const order = d.options.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [order[i],order[j]]=[order[j],order[i]];
+  }
+  const letters = ['A','B','C','D','E','F'];
+  order.forEach((origIdx, displayPos)=>{
+    const o = d.options[origIdx];
+    const div = document.createElement('div');
+    div.className = 'opt';
+    div.dataset.orig = origIdx;
+    div.innerHTML = '<div class="ol">'+letters[displayPos]+'</div><div class="ot">'+o.t+'</div>';
+    div.addEventListener('click', ()=>selectOption(div, origIdx));
+    box.appendChild(div);
+  });
+
+  el('nextBtn').disabled = true;
+  el('lockMsg').innerHTML = 'Elijan una opción para continuar. <b>No podrán volver.</b>';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selectOption(div, origIdx){
+  document.querySelectorAll('.opt').forEach(o=>o.classList.remove('picked'));
+  div.classList.add('picked');
+  picked = origIdx;
+  el('nextBtn').disabled = false;
+  el('lockMsg').innerHTML = 'Decisión seleccionada. Al confirmar, <b>no podrán volver atrás.</b>';
+}
+
+el('nextBtn').addEventListener('click', ()=>{
+  if(picked===null) return;
+  const d = DECISIONS[idx];
+  el('modalPick').textContent = '“' + d.options[picked].t.replace(/<[^>]+>/g,'') + '”';
+  el('modalBg').classList.add('show');
+});
+el('modalCancel').addEventListener('click', ()=> el('modalBg').classList.remove('show'));
+el('modalConfirm').addEventListener('click', ()=>{
+  el('modalBg').classList.remove('show');
+  commitDecision();
+});
+
+function commitDecision(){
+  const sc = DECISIONS[idx].options[picked].sc;
+  for(const k in totals) totals[k] += sc[k];
+  idx++;
+  if(idx < TOTAL) renderDecision();
+  else showResults();
+}
+
+/* Rango teórico real de cada variable a lo largo de las 30 decisiones,
+   usado para normalizar cada eje a una escala 0..20 con el techo real
+   como 20 y el piso real como 0. Un camino balanceado fuerte ronda
+   los ~85-90; maximizar una sola variable deja las demás bajas. */
+const RANGE = {
+  CON:{max:88, min:-91},
+  GOB:{max:107, min:-111},
+  PRO:{max:90, min:-84},
+  ARM:{max:95, min:-105},
+  NEG:{max:75, min:-81},
+};
+const VARMAX = {CON:20, GOB:20, PRO:20, ARM:20, NEG:20};
+function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+
+function showResults(){
+  el('s-decision').classList.remove('show');
+  el('s-result').classList.add('show');
+  el('pbar').style.width = '100%';
+  el('progLabel').textContent = 'Completado';
+  el('resTeam').textContent = teamName;
+
+  // ---- tiempo total ----
+  const elapsedMs = stopClock();
+  const elapsedMin = elapsedMs / 60000;
+
+  const scaled = {};
+  let raw = 0;
+  for(const v of VARS){
+    let rawV = totals[v.k];
+    const r = RANGE[v.k];
+    let norm = (rawV - r.min) / (r.max - r.min);
+    let val = clamp(Math.round(norm * 20), 0, 20);
+    scaled[v.k] = val;
+    raw += val;
+  }
+  // puntaje por decisiones (camino ideal ronda ~90)
+  let decisionScore = clamp(Math.round(raw * 0.96), 0, 100);
+
+  // ---- penalización por tiempo ----
+  // 0–75 min: sin penalización · 75–135 min: lineal hasta -15 · >135 min: -15
+  const FREE_MIN = 75, FULL_MIN = 135, MAX_PENALTY = 15;
+  let timePenalty = 0;
+  if(elapsedMin > FREE_MIN){
+    const over = Math.min(elapsedMin, FULL_MIN) - FREE_MIN;
+    timePenalty = Math.round((over / (FULL_MIN - FREE_MIN)) * MAX_PENALTY);
+  }
+  let total = clamp(decisionScore - timePenalty, 0, 100);
+
+  const grid = el('scoreGrid');
+  grid.innerHTML = '';
+  for(const v of VARS){
+    const val = scaled[v.k];
+    const pct = (val/VARMAX[v.k])*100;
+    const row = document.createElement('div');
+    row.className = 'scorerow';
+    row.innerHTML =
+      '<div class="sname">'+v.name+'<small>'+v.sub+'</small></div>'+
+      '<div class="sbar"><div class="sbar-fill" style="width:0%;background:'+v.color+';"></div></div>'+
+      '<div class="sval">'+val+'</div>';
+    grid.appendChild(row);
+    setTimeout(()=>{ row.querySelector('.sbar-fill').style.width = pct+'%'; }, 120);
+  }
+
+  // ---- bloque de tiempo y desglose del total ----
+  const timeStr = fmtClock(elapsedMs);
+  el('timeVal').textContent = timeStr;
+  el('decScoreVal').textContent = decisionScore + ' / 100';
+  if(timePenalty > 0){
+    el('penaltyRow').style.display = 'flex';
+    el('penaltyVal').textContent = '\u2212' + timePenalty + ' pts';
+    el('timeNote').textContent = elapsedMin <= FULL_MIN
+      ? 'El grupo superó los 75 min de trabajo: se aplicó un descuento proporcional.'
+      : 'El grupo superó los 135 min: se aplicó el descuento máximo de 15 puntos.';
+  } else {
+    el('penaltyRow').style.display = 'none';
+    el('timeNote').textContent = 'El grupo terminó dentro de los 75 min: sin penalización por tiempo.';
+  }
+
+  el('totalVal').innerHTML = total + '<small>/100</small>';
+
+  const lvl = getLevel(total);
+  el('lvName').textContent = lvl.name;
+  el('lvScore').innerHTML = total + '<small>/100</small>';
+  el('lvDesc').textContent = lvl.desc;
+  el('lvBand').style.background = lvl.color;
+  el('resTitle').textContent = lvl.title;
+
+  el('diagText').innerHTML = buildDiagnosis(scaled);
+
+  // código incluye el tiempo en minutos al final (TTT)
+  const mins = Math.round(elapsedMin);
+  const code = pad(scaled.CON)+pad(scaled.GOB)+pad(scaled.PRO)+pad(scaled.ARM)+pad(scaled.NEG)
+             +'-'+pad(total)+'-T'+String(mins).padStart(3,'0');
+  el('resultCode').textContent = code;
+
+  window.__resultSummary = buildSummaryText(scaled, total, lvl, code, timeStr, decisionScore, timePenalty);
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function pad(n){return String(n).padStart(2,'0');}
+
+function getLevel(t){
+  if(t>=85) return {
+    name:'Familia empresaria consolidada', title:'Transición exitosa', color:'#4a5d3a',
+    desc:'El comité logró lo más difícil: pasar de una generación a la otra sin romper la empresa ni destruir la familia. Hay sucesión planificada, gobierno formal y un negocio sostenible. Esta es la decisión de un equipo que entendió que el conflicto se gobierna, no se evita.'};
+  if(t>=66) return {
+    name:'Transición encaminada', title:'Transición encaminada', color:'#3d4751',
+    desc:'El comité tomó decisiones sólidas en la mayoría de los frentes. La transición es viable, pero quedaron flancos sin resolver del todo: revisen abajo cuál es la variable más débil, porque ahí está el riesgo que puede volver a aparecer.'};
+  if(t>=45) return {
+    name:'Empresa familiar en tensión', title:'Empresa familiar en tensión', color:'#c8941e',
+    desc:'El comité resolvió algunas cosas pero postergó o eligió mal en otras. La empresa sobrevive a la transición, aunque con conflictos latentes sin mecanismo para procesarlos. Es la zona donde la mayoría de las empresas familiares se estanca.'};
+  return {
+    name:'Crisis sucesoria', title:'Crisis sucesoria', color:'#8a3415',
+    desc:'El comité priorizó la calma de corto plazo —no incomodar, no formalizar, no soltar— por encima de las decisiones difíciles. Es el camino de la armonía aparente que evita el conflicto real: la antesala de una crisis mayor en la próxima generación.'};
+}
+
+function buildDiagnosis(sc){
+  const arr = VARS.map(v=>({v, val:sc[v.k]}));
+  arr.sort((a,b)=>a.val-b.val);
+  const weak = arr[0], weak2 = arr[1], strong = arr[arr.length-1];
+  const msgWeak = {
+    CON:'la continuidad quedó frágil: la sucesión no se planificó con la firmeza necesaria y el riesgo de un vacío de poder sigue abierto.',
+    GOB:'el gobierno quedó débil: faltan órganos o reglas claras, y sin ellos los conflictos futuros no tienen dónde procesarse.',
+    PRO:'la profesionalización quedó postergada: la gestión sigue dependiendo demasiado del vínculo familiar y poco del mérito.',
+    ARM:'la armonía familiar quedó comprometida: se tomaron decisiones correctas para el negocio pero se descuidó el vínculo, y eso también es un riesgo.',
+    NEG:'la sostenibilidad del negocio quedó en riesgo: se cuidó a la familia pero se desatendió la competitividad de la empresa.'
+  };
+  const msgStrong = {
+    CON:'la continuidad: la sucesión fue tratada como el proceso serio que es.',
+    GOB:'el gobierno: el comité construyó reglas y órganos para que las decisiones no dependan de una sola persona.',
+    PRO:'la profesionalización: se priorizó el mérito y la gestión por encima del apellido.',
+    ARM:'la armonía familiar: se cuidó el vínculo y se dio voz a todos los actores.',
+    NEG:'la sostenibilidad del negocio: la competitividad de la empresa fue una prioridad real.'
+  };
+  return '<p><b>Fortaleza del grupo —</b> El puntaje más alto es <b>'+strong.v.name+'</b>: '+msgStrong[strong.v.k]+'</p>'+
+         '<p><b>Punto débil del grupo —</b> El puntaje más bajo es <b>'+weak.v.name+'</b>: '+msgWeak[weak.v.k]+'</p>'+
+         '<p><b>Para discutir en clase —</b> ¿Qué decisiones concretas llevaron a que '+weak.v.name+' y '+weak2.v.name+' quedaran por debajo del resto? ¿Hubo un trade-off consciente, o se descuidó sin querer?</p>';
+}
+
+function buildSummaryText(sc,total,lvl,code,timeStr,decScore,penalty){
+  let t = 'EL CONSEJO DE FAMILIA — HOJA DE RESULTADOS\n';
+  t += 'Grupo: '+teamName+'\n';
+  t += '------------------------------------------\n';
+  for(const v of VARS){ t += (v.name+':').padEnd(21,' ')+sc[v.k]+'/20\n'; }
+  t += '------------------------------------------\n';
+  t += 'Puntaje por decisiones: '+decScore+'/100\n';
+  t += 'Tiempo total: '+timeStr+'\n';
+  if(penalty>0) t += 'Penalizacion por tiempo: -'+penalty+' pts\n';
+  else t += 'Penalizacion por tiempo: ninguna\n';
+  t += '------------------------------------------\n';
+  t += 'PUNTAJE TOTAL: '+total+'/100\n';
+  t += 'NIVEL: '+lvl.name+'\n';
+  t += 'CODIGO DE RESULTADO: '+code+'\n';
+  return t;
+}
+
+el('printBtn').addEventListener('click', ()=> window.print());
+el('copyBtn').addEventListener('click', ()=>{
+  const txt = window.__resultSummary || '';
+  navigator.clipboard.writeText(txt).then(()=>{
+    el('copyBtn').textContent = '¡Resumen copiado!';
+    setTimeout(()=> el('copyBtn').textContent = 'Copiar resumen al portapapeles', 2200);
+  }).catch(()=>{
+    el('copyBtn').textContent = 'No se pudo copiar';
+    setTimeout(()=> el('copyBtn').textContent = 'Copiar resumen al portapapeles', 2200);
+  });
+});
+
+window.addEventListener('beforeunload', e=>{
+  if(idx>0 && idx<TOTAL){ e.preventDefault(); e.returnValue=''; }
+});
+</script>
+</body>
+</html>
